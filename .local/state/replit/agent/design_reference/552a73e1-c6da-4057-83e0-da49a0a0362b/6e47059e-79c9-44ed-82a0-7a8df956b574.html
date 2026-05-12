@@ -1,0 +1,938 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Monitoring Dashboard - EcoTech Innovators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Inter", "system-ui", "sans-serif"],
+                }
+            },
+        }
+    };
+    </script>
+    
+    <style>
+        :root {
+            --background: hsl(0 0% 100%);
+            --foreground: hsl(222.2 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222.2 84% 4.9%);
+            --primary: hsl(158 64% 40%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(215 20% 35%);
+            --secondary-foreground: hsl(210 40% 98%);
+            --muted: hsl(210 40% 96%);
+            --muted-foreground: hsl(215.4 16.3% 46.9%);
+            --accent: hsl(20 90% 48%);
+            --accent-foreground: hsl(210 40% 98%);
+            --destructive: hsl(0 84.2% 60.2%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --border: hsl(214.3 31.8% 91.4%);
+            --input: hsl(214.3 31.8% 91.4%);
+            --ring: hsl(158 64% 40%);
+            --radius: 0.75rem;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .sidebar-nav-item {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .sidebar-nav-item:hover {
+            transform: translateX(4px);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        
+        .page-content {
+            opacity: 0;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        .chart-container {
+            min-height: 300px;
+            background: var(--card);
+            border-radius: var(--radius);
+        }
+    </style>
+    
+    <!-- Heroicons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/outline/index.css">
+    
+    <!-- Recharts via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.js"></script>
+    
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+
+<body class="bg-background text-foreground antialiased">
+    <div class="min-h-screen bg-muted/30">
+        
+        <!-- @COMPONENT: Sidebar [navigation] -->
+        <aside id="sidebar" class="fixed left-0 top-0 z-40 h-screen w-64 bg-gray-800 transition-transform">
+            <div class="flex h-full flex-col overflow-y-auto bg-gray-800 px-3 py-4">
+                <!-- Logo/Brand -->
+                <div class="mb-8 flex items-center space-x-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+                        <svg class="h-6 w-6 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold text-white">EcoTech</span>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <nav class="space-y-2 font-medium">
+                    <a href="#" onclick="showPage('dashboard')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-white bg-primary/20" id="nav-dashboard">
+                        <svg class="h-5 w-5 text-gray-300 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"/>
+                        </svg>
+                        <span class="ml-3">Dashboard</span>
+                    </a>
+                    
+                    <a href="#" onclick="showPage('reports')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-gray-300 hover:bg-gray-700 hover:text-white" id="nav-reports">
+                        <svg class="h-5 w-5 text-gray-400 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="ml-3">Reports</span>
+                    </a>
+                    
+                    <a href="#" onclick="showPage('workers')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-gray-300 hover:bg-gray-700 hover:text-white" id="nav-workers">
+                        <svg class="h-5 w-5 text-gray-400 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="ml-3">Workers</span>
+                    </a>
+                    
+                    <a href="#" onclick="showPage('citizens')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-gray-300 hover:bg-gray-700 hover:text-white" id="nav-citizens">
+                        <svg class="h-5 w-5 text-gray-400 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                        </svg>
+                        <span class="ml-3">Citizens</span>
+                    </a>
+                    
+                    <a href="#" onclick="showPage('analytics')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-gray-300 hover:bg-gray-700 hover:text-white" id="nav-analytics">
+                        <svg class="h-5 w-5 text-gray-400 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span class="ml-3">Analytics</span>
+                    </a>
+                    
+                    <a href="#" onclick="showPage('settings')" class="sidebar-nav-item group flex items-center rounded-lg p-2 text-gray-300 hover:bg-gray-700 hover:text-white" id="nav-settings">
+                        <svg class="h-5 w-5 text-gray-400 transition duration-75 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="ml-3">Settings</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+        
+        <!-- @COMPONENT: MainContent [layout] -->
+        <div class="p-4 ml-64">
+            
+            <!-- @COMPONENT: TopNavbar [navigation] -->
+            <header class="mb-8 flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm">
+                <div>
+                    <h1 class="text-2xl font-bold text-foreground">EcoTech Innovators</h1>
+                    <p class="text-sm text-muted-foreground">Smart Waste Monitoring Dashboard</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5-5 5h5zm-10 4v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2h3a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-foreground" data-bind="user.name">Sarah Johnson</p>
+                            <p class="text-xs text-muted-foreground" data-bind="user.role">System Administrator</p>
+                        </div>
+                        <button class="rounded-full p-1">
+                            <!-- Profile picture of a professional woman with short brown hair -->
+                            <img src="https://pixabay.com/get/gf0b4fcc6295b1c62552ac24a918646b1f52fcf22d87b915d373b3fcdddbd3cf4ad4549dba62f1a098e9f613c06ca56ac2faf219bb9e500e264d521c22f125ef3_1280.jpg" alt="User Profile" class="h-10 w-10 rounded-full object-cover" />
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: TopNavbar -->
+            
+            <!-- @COMPONENT: DashboardPage [default view] -->
+            <div id="dashboard-page" class="page-content">
+                <!-- Summary Cards Section -->
+                <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Total Reports</p>
+                                <p class="text-3xl font-bold text-foreground" data-bind="metrics.totalReports">2,847</p>
+                                <p class="mt-2 flex items-center text-sm text-primary">
+                                    <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                                    </svg>
+                                    +12% from last month
+                                </p>
+                            </div>
+                            <div class="rounded-lg bg-primary/10 p-3">
+                                <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Active Workers</p>
+                                <p class="text-3xl font-bold text-foreground" data-bind="metrics.activeWorkers">48</p>
+                                <p class="mt-2 flex items-center text-sm text-primary">
+                                    <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                                    </svg>
+                                    +3 new this week
+                                </p>
+                            </div>
+                            <div class="rounded-lg bg-accent/10 p-3">
+                                <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Pending Tasks</p>
+                                <p class="text-3xl font-bold text-foreground" data-bind="metrics.pendingTasks">126</p>
+                                <p class="mt-2 flex items-center text-sm text-destructive">
+                                    <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+                                    </svg>
+                                    -8% from yesterday
+                                </p>
+                            </div>
+                            <div class="rounded-lg bg-destructive/10 p-3">
+                                <svg class="h-6 w-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Citizen Participation</p>
+                                <p class="text-3xl font-bold text-foreground" data-bind="metrics.citizenParticipation">1,234</p>
+                                <p class="mt-2 flex items-center text-sm text-primary">
+                                    <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                                    </svg>
+                                    +18% engagement
+                                </p>
+                            </div>
+                            <div class="rounded-lg bg-secondary/10 p-3">
+                                <svg class="h-6 w-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Map and Chart Section -->
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- Map Section -->
+                    <div class="rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="mb-4 flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-foreground">Waste Reports Map</h3>
+                            <button class="rounded-lg bg-primary px-3 py-1 text-sm text-primary-foreground hover:bg-primary/90">
+                                View All
+                            </button>
+                        </div>
+                        <!-- @FUNCTIONALITY: Interactive map showing waste report locations -->
+                        <div id="map" class="h-80 w-full rounded-lg bg-muted">
+                            <!-- Map will be initialized via JavaScript -->
+                        </div>
+                        <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-sm text-muted-foreground">High Priority</p>
+                                <p class="text-lg font-semibold text-destructive" data-bind="mapStats.highPriority">23</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-muted-foreground">Medium Priority</p>
+                                <p class="text-lg font-semibold text-accent" data-bind="mapStats.mediumPriority">45</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-muted-foreground">Low Priority</p>
+                                <p class="text-lg font-semibold text-primary" data-bind="mapStats.lowPriority">58</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Section -->
+                    <div class="rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="mb-4 flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-foreground">Reports per Day</h3>
+                            <select class="rounded-lg border border-border bg-background px-3 py-1 text-sm">
+                                <option>Last 7 days</option>
+                                <option>Last 30 days</option>
+                                <option>Last 3 months</option>
+                            </select>
+                        </div>
+                        <!-- @FUNCTIONALITY: Line chart showing daily reports using Recharts -->
+                        <div id="reports-chart" class="chart-container">
+                            <!-- Chart will be rendered via React/Recharts -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardPage -->
+            
+            <!-- @COMPONENT: ReportsPage [hidden by default] -->
+            <div id="reports-page" class="page-content hidden">
+                <div class="mb-6 flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-foreground">Waste Reports</h2>
+                    <div class="flex items-center space-x-4">
+                        <input type="text" placeholder="Search reports..." class="rounded-lg border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                        <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                            <option>All Status</option>
+                            <option>Pending</option>
+                            <option>Assigned</option>
+                            <option>Collected</option>
+                        </select>
+                        <button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="rounded-2xl bg-card shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead class="border-b border-border bg-muted/50">
+                                <tr>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Report ID</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Citizen Name</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Location</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Waste Type</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Status</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Date</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border">
+                                <!-- @MAP: reports.map(report => ( -->
+                                <tr class="hover:bg-muted/50" data-mock="true">
+                                    <td class="p-4 text-sm font-medium text-foreground" data-bind="report.id">RPT-001</td>
+                                    <td class="p-4 text-sm text-foreground" data-bind="report.citizenName">John Smith</td>
+                                    <td class="p-4 text-sm text-muted-foreground" data-bind="report.location">123 Main St, Downtown</td>
+                                    <td class="p-4 text-sm text-foreground" data-bind="report.wasteType">Organic</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center rounded-full bg-accent/10 px-2 py-1 text-xs font-medium text-accent" data-bind="report.status">Pending</span>
+                                    </td>
+                                    <td class="p-4 text-sm text-muted-foreground" data-bind="report.date">2024-01-15</td>
+                                    <td class="p-4">
+                                        <button class="rounded-lg bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90" data-event="click:assignWorker">
+                                            Assign Worker
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-muted/50" data-mock="true">
+                                    <td class="p-4 text-sm font-medium text-foreground">RPT-002</td>
+                                    <td class="p-4 text-sm text-foreground">Maria Garcia</td>
+                                    <td class="p-4 text-sm text-muted-foreground">456 Oak Ave, Midtown</td>
+                                    <td class="p-4 text-sm text-foreground">Recyclable</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">Assigned</span>
+                                    </td>
+                                    <td class="p-4 text-sm text-muted-foreground">2024-01-15</td>
+                                    <td class="p-4">
+                                        <button class="rounded-lg bg-muted px-3 py-1 text-xs text-muted-foreground">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-muted/50" data-mock="true">
+                                    <td class="p-4 text-sm font-medium text-foreground">RPT-003</td>
+                                    <td class="p-4 text-sm text-foreground">David Lee</td>
+                                    <td class="p-4 text-sm text-muted-foreground">789 Pine St, Uptown</td>
+                                    <td class="p-4 text-sm text-foreground">Hazardous</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">High Priority</span>
+                                    </td>
+                                    <td class="p-4 text-sm text-muted-foreground">2024-01-14</td>
+                                    <td class="p-4">
+                                        <button class="rounded-lg bg-destructive px-3 py-1 text-xs text-destructive-foreground hover:bg-destructive/90">
+                                            Urgent Assign
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between border-t border-border px-6 py-4">
+                        <div class="text-sm text-muted-foreground">
+                            Showing 1 to 10 of 2,847 results
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">Previous</button>
+                            <button class="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">1</button>
+                            <button class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">2</button>
+                            <button class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">3</button>
+                            <button class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ReportsPage -->
+            
+            <!-- @COMPONENT: WorkersPage [hidden by default] -->
+            <div id="workers-page" class="page-content hidden">
+                <div class="mb-6 flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-foreground">Workers Management</h2>
+                    <div class="flex items-center space-x-4">
+                        <input type="text" placeholder="Search workers..." class="rounded-lg border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                        <button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
+                            Add New Worker
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="rounded-2xl bg-card shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead class="border-b border-border bg-muted/50">
+                                <tr>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Worker ID</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Name</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Contact</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Assigned Tasks</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Status</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Performance</th>
+                                    <th class="p-4 text-left text-sm font-medium text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border">
+                                <tr class="hover:bg-muted/50" data-mock="true">
+                                    <td class="p-4 text-sm font-medium text-foreground" data-bind="worker.id">WRK-001</td>
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <!-- Portrait of a male worker in safety gear -->
+                                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=40&h=40" alt="Worker Profile" class="h-8 w-8 rounded-full object-cover" />
+                                            <div>
+                                                <p class="text-sm font-medium text-foreground" data-bind="worker.name">Mike Johnson</p>
+                                                <p class="text-xs text-muted-foreground" data-bind="worker.department">Collection Team A</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-muted-foreground" data-bind="worker.contact">+1 (555) 123-4567</td>
+                                    <td class="p-4 text-sm text-foreground" data-bind="worker.assignedTasks">8</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary" data-bind="worker.status">Active</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="h-2 w-16 bg-muted rounded-full">
+                                                <div class="h-2 w-12 bg-primary rounded-full" data-bind="worker.performance"></div>
+                                            </div>
+                                            <span class="text-xs text-muted-foreground">85%</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <button class="rounded-lg bg-accent px-3 py-1 text-xs text-accent-foreground hover:bg-accent/90">
+                                            Assign Task
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-muted/50" data-mock="true">
+                                    <td class="p-4 text-sm font-medium text-foreground">WRK-002</td>
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <!-- Portrait of a female worker with safety equipment -->
+                                            <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=40&h=40" alt="Worker Profile" class="h-8 w-8 rounded-full object-cover" />
+                                            <div>
+                                                <p class="text-sm font-medium text-foreground">Sarah Wilson</p>
+                                                <p class="text-xs text-muted-foreground">Collection Team B</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-sm text-muted-foreground">+1 (555) 987-6543</td>
+                                    <td class="p-4 text-sm text-foreground">12</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">Active</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="h-2 w-16 bg-muted rounded-full">
+                                                <div class="h-2 w-14 bg-primary rounded-full"></div>
+                                            </div>
+                                            <span class="text-xs text-muted-foreground">92%</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <button class="rounded-lg bg-accent px-3 py-1 text-xs text-accent-foreground hover:bg-accent/90">
+                                            Assign Task
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: WorkersPage -->
+            
+            <!-- @COMPONENT: CitizensPage [hidden by default] -->
+            <div id="citizens-page" class="page-content hidden">
+                <div class="mb-6 flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-foreground">Citizen Engagement</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
+                            Send Notification
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Citizen Stats Cards -->
+                <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Total Citizens</p>
+                                <p class="text-3xl font-bold text-foreground">15,234</p>
+                            </div>
+                            <div class="rounded-lg bg-primary/10 p-3">
+                                <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Active Reports</p>
+                                <p class="text-3xl font-bold text-foreground">1,847</p>
+                            </div>
+                            <div class="rounded-lg bg-accent/10 p-3">
+                                <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-hover rounded-2xl bg-card p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-muted-foreground">Satisfaction Rate</p>
+                                <p class="text-3xl font-bold text-foreground">94.2%</p>
+                            </div>
+                            <div class="rounded-lg bg-secondary/10 p-3">
+                                <svg class="h-6 w-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Citizen Activity -->
+                <div class="rounded-2xl bg-card p-6 shadow-sm">
+                    <h3 class="mb-4 text-lg font-semibold text-foreground">Recent Citizen Activity</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 border-b border-border pb-4" data-mock="true">
+                            <!-- Portrait of a middle-aged man -->
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=40&h=40" alt="Citizen Profile" class="h-10 w-10 rounded-full object-cover" />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-foreground">Robert Chen reported organic waste</p>
+                                <p class="text-xs text-muted-foreground">Downtown area • 2 hours ago</p>
+                            </div>
+                            <span class="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary">New Report</span>
+                        </div>
+                        <div class="flex items-center space-x-4 border-b border-border pb-4" data-mock="true">
+                            <!-- Portrait of a young woman -->
+                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=40&h=40" alt="Citizen Profile" class="h-10 w-10 rounded-full object-cover" />
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-foreground">Emma Thompson rated collection service</p>
+                                <p class="text-xs text-muted-foreground">5 stars • Excellent service • 4 hours ago</p>
+                            </div>
+                            <span class="rounded-full bg-accent/10 px-2 py-1 text-xs text-accent">Feedback</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: CitizensPage -->
+            
+            <!-- @COMPONENT: AnalyticsPage [hidden by default] -->
+            <div id="analytics-page" class="page-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-foreground">Analytics Dashboard</h2>
+                    <p class="text-muted-foreground">Comprehensive insights into waste management performance</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <!-- Waste Type Breakdown (Pie Chart) -->
+                        <div class="rounded-2xl bg-card p-6 shadow-sm">
+                            <h3 class="mb-4 text-lg font-semibold text-foreground">Waste Type Breakdown</h3>
+                            <!-- @FUNCTIONALITY: Pie chart showing waste type distribution using Recharts -->
+                            <div id="waste-type-chart" class="chart-container">
+                                <div class="flex h-64 items-center justify-center">
+                                    <div class="text-center">
+                                        <div class="mx-auto mb-4 h-32 w-32 rounded-full bg-gradient-to-r from-primary to-accent"></div>
+                                        <p class="text-sm text-muted-foreground">Pie chart showing waste distribution</p>
+                                        <div class="mt-4 grid grid-cols-2 gap-4 text-xs">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="h-3 w-3 rounded-full bg-primary"></div>
+                                                <span>Organic (45%)</span>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="h-3 w-3 rounded-full bg-accent"></div>
+                                                <span>Recyclable (35%)</span>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="h-3 w-3 rounded-full bg-secondary"></div>
+                                                <span>General (15%)</span>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="h-3 w-3 rounded-full bg-destructive"></div>
+                                                <span>Hazardous (5%)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Collection Efficiency (Bar Chart) -->
+                        <div class="rounded-2xl bg-card p-6 shadow-sm">
+                            <h3 class="mb-4 text-lg font-semibold text-foreground">Collection Efficiency</h3>
+                            <!-- @FUNCTIONALITY: Bar chart showing collection efficiency using Recharts -->
+                            <div id="efficiency-chart" class="chart-container">
+                                <div class="flex h-64 items-end justify-center space-x-2 px-4">
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <div class="h-20 w-8 bg-primary rounded-t"></div>
+                                        <span class="text-xs text-muted-foreground">Mon</span>
+                                    </div>
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <div class="h-28 w-8 bg-primary rounded-t"></div>
+                                        <span class="text-xs text-muted-foreground">Tue</span>
+                                    </div>
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <div class="h-24 w-8 bg-primary rounded-t"></div>
+                                        <span class="text-xs text-muted-foreground">Wed</span>
+                                    </div>
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <div class="h-32 w-8 bg-primary rounded-t"></div>
+                                        <span class="text-xs text-muted-foreground">Thu</span>
+                                    </div>
+                                    <div class="flex flex-col items-center space-y-2">
+                                        <div class="h-16 w-8 bg-primary rounded-t"></div>
+                                        <span class="text-xs text-muted-foreground">Fri</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Citizen Participation Trend (Line Chart) -->
+                    <div class="rounded-2xl bg-card p-6 shadow-sm">
+                        <h3 class="mb-4 text-lg font-semibold text-foreground">Citizen Participation Trend</h3>
+                        <!-- @FUNCTIONALITY: Line chart showing participation trends using Recharts -->
+                        <div id="participation-chart" class="chart-container">
+                            <div class="relative h-64">
+                                <svg class="h-full w-full" viewBox="0 0 400 200">
+                                    <polyline
+                                        fill="none"
+                                        stroke="hsl(158 64% 40%)"
+                                        stroke-width="3"
+                                        points="50,150 100,120 150,100 200,80 250,90 300,70 350,60"
+                                    />
+                                    <circle cx="50" cy="150" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="100" cy="120" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="150" cy="100" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="200" cy="80" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="250" cy="90" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="300" cy="70" r="4" fill="hsl(158 64% 40%)"/>
+                                    <circle cx="350" cy="60" r="4" fill="hsl(158 64% 40%)"/>
+                                </svg>
+                                <div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground px-4">
+                                    <span>Jan</span>
+                                    <span>Feb</span>
+                                    <span>Mar</span>
+                                    <span>Apr</span>
+                                    <span>May</span>
+                                    <span>Jun</span>
+                                    <span>Jul</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: AnalyticsPage -->
+            
+            <!-- @COMPONENT: SettingsPage [hidden by default] -->
+            <div id="settings-page" class="page-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-foreground">Settings</h2>
+                    <p class="text-muted-foreground">Manage system configuration and preferences</p>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <!-- System Settings -->
+                    <div class="rounded-2xl bg-card p-6 shadow-sm">
+                        <h3 class="mb-4 text-lg font-semibold text-foreground">System Configuration</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Organization Name</label>
+                                <input type="text" value="EcoTech Innovators" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Default Map Center</label>
+                                <input type="text" value="40.7128, -74.0060" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Report Auto-Assignment</label>
+                                <select class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                    <option>Enabled</option>
+                                    <option>Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notification Settings -->
+                    <div class="rounded-2xl bg-card p-6 shadow-sm">
+                        <h3 class="mb-4 text-lg font-semibold text-foreground">Notifications</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-foreground">Email Notifications</p>
+                                    <p class="text-xs text-muted-foreground">Receive email alerts for urgent reports</p>
+                                </div>
+                                <button class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary">
+                                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-6"></span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-foreground">SMS Alerts</p>
+                                    <p class="text-xs text-muted-foreground">Get SMS for high priority reports</p>
+                                </div>
+                                <button class="relative inline-flex h-6 w-11 items-center rounded-full bg-muted">
+                                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted">
+                        Cancel
+                    </button>
+                    <button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SettingsPage -->
+        </div>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <script>
+        // @STATE: currentPage:string = 'dashboard'
+        let currentPage = 'dashboard';
+        
+        // Navigation functionality
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = ['dashboard', 'reports', 'workers', 'citizens', 'analytics', 'settings'];
+            pages.forEach(page => {
+                const pageElement = document.getElementById(page + '-page');
+                if (pageElement) {
+                    pageElement.classList.add('hidden');
+                }
+                
+                // Update navigation states
+                const navElement = document.getElementById('nav-' + page);
+                if (navElement) {
+                    navElement.classList.remove('bg-primary/20', 'text-white');
+                    navElement.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+                }
+            });
+            
+            // Show selected page
+            const selectedPage = document.getElementById(pageId + '-page');
+            if (selectedPage) {
+                selectedPage.classList.remove('hidden');
+            }
+            
+            // Update selected nav item
+            const selectedNav = document.getElementById('nav-' + pageId);
+            if (selectedNav) {
+                selectedNav.classList.remove('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+                selectedNav.classList.add('bg-primary/20', 'text-white');
+            }
+            
+            currentPage = pageId;
+        }
+        
+        // Initialize map
+        function initializeMap() {
+            // TODO: Implement interactive map using Leaflet
+            const map = L.map('map').setView([40.7128, -74.0060], 11);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Mock waste report locations
+            const wasteReports = [
+                { lat: 40.7580, lng: -73.9855, type: 'High Priority', description: 'Hazardous waste reported' },
+                { lat: 40.7128, lng: -74.0060, type: 'Medium Priority', description: 'Organic waste overflow' },
+                { lat: 40.6892, lng: -74.0445, type: 'Low Priority', description: 'Recyclable collection' },
+                { lat: 40.7614, lng: -73.9776, type: 'High Priority', description: 'Large item disposal' },
+                { lat: 40.7090, lng: -74.0134, type: 'Medium Priority', description: 'General waste' }
+            ];
+            
+            wasteReports.forEach(report => {
+                const color = report.type === 'High Priority' ? 'red' : 
+                             report.type === 'Medium Priority' ? 'orange' : 'green';
+                
+                const marker = L.circleMarker([report.lat, report.lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.7,
+                    radius: 8
+                }).addTo(map);
+                
+                marker.bindPopup(`<b>${report.type}</b><br>${report.description}`);
+            });
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map
+            setTimeout(() => {
+                if (typeof L !== 'undefined') {
+                    initializeMap();
+                }
+            }, 100);
+            
+            // Add smooth animations
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+        
+        // Mock data for demonstration
+        const mockData = {
+            reports: [
+                { id: 'RPT-001', citizenName: 'John Smith', location: '123 Main St', wasteType: 'Organic', status: 'Pending', date: '2024-01-15' },
+                { id: 'RPT-002', citizenName: 'Maria Garcia', location: '456 Oak Ave', wasteType: 'Recyclable', status: 'Assigned', date: '2024-01-15' },
+                { id: 'RPT-003', citizenName: 'David Lee', location: '789 Pine St', wasteType: 'Hazardous', status: 'High Priority', date: '2024-01-14' }
+            ],
+            workers: [
+                { id: 'WRK-001', name: 'Mike Johnson', department: 'Collection Team A', contact: '+1 (555) 123-4567', tasks: 8, status: 'Active', performance: 85 },
+                { id: 'WRK-002', name: 'Sarah Wilson', department: 'Collection Team B', contact: '+1 (555) 987-6543', tasks: 12, status: 'Active', performance: 92 }
+            ],
+            metrics: {
+                totalReports: 2847,
+                activeWorkers: 48,
+                pendingTasks: 126,
+                citizenParticipation: 1234
+            }
+        };
+        
+        // TODO: Implement business logic, API calls, and state management
+        // TODO: Add form validation and error handling
+        // TODO: Implement real-time data updates
+        // TODO: Add data export functionality
+        // TODO: Implement worker assignment logic
+    </script>
+</body>
+</html>

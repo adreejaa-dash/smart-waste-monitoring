@@ -1,0 +1,50 @@
+Create a Node.js + Express backend API for the project Smart Waste Monitoring & Citizen Engagement.
+Use PostgreSQL as the database (use SQLite as fallback/mock DB for demo).
+The backend should support citizens, workers, and ULB admins.
+Features / API Endpoints:
+1. Authentication
+POST /api/auth/register → Register citizen/worker/admin (role-based).
+POST /api/auth/login → Login and return JWT token.
+2. Citizen Features
+POST /api/reports → Citizen submits a report with:
+photo URL (mock for now),
+wasteType (plastic, organic, recyclable, hazardous),
+geoLocation (lat, long),
+status (default = Pending).
+GET /api/reports/mine → Get reports submitted by logged-in citizen.
+3. Worker Features
+GET /api/tasks → Worker sees assigned tasks (reports).
+PUT /api/tasks/:id → Update task status (Collected/Not Collected), upload proof photo.
+4. ULB/Admin Features
+GET /api/reports → List all reports with filters (Pending, Collected, In-Progress).
+PUT /api/reports/:id/assign → Assign report to a worker.
+GET /api/workers → List all workers and their stats.
+GET /api/analytics → Return mock analytics:
+totalReports, activeWorkers, citizenParticipation
+wasteTypeBreakdown (pie chart data)
+reportsPerDay (line chart data)
+5. Rewards System (Mock)
+GET /api/rewards/:citizenId → Get reward points.
+PUT /api/rewards/:citizenId → Update reward points after successful report collection.
+Tech & Structure:
+Server: Node.js + Express
+Database: PostgreSQL (with Sequelize ORM; use SQLite fallback for demo)
+Authentication: JWT (jsonwebtoken + bcrypt for password hashing)
+File Structure:
+/models → Sequelize models (User, Report, Worker, Reward)
+/routes → Routes for auth, reports, workers, admin, rewards
+/controllers → Logic for handling routes
+/config/db.js → Database connection setup
+server.js → Main entry point
+Middleware:
+authMiddleware.js → Verify JWT & roles (citizen, worker, admin).
+errorHandler.js → Handle errors globally.
+Mock Data for Testing:
+3 sample citizens, 2 workers, 1 admin.
+10 sample reports (mix of plastic/organic/hazardous, some pending, some collected).
+Sample reward points for each citizen.
+Extra:
+Enable CORS so React frontend can connect.
+Return JSON responses formatted cleanly.
+Use dotenv for environment variables (DB URL, JWT secret).
+Add Swagger/OpenAPI docs (/api/docs) for API testing.
